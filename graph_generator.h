@@ -48,6 +48,8 @@ static inline void write_edge(packed_edge* p, int64_t v0, int64_t v1) {
 
 #else
 
+#include <stdlib.h>
+
 typedef struct packed_edge {
   int64_t v0;
   int64_t v1;
@@ -64,6 +66,43 @@ static inline int64_t get_v1_from_edge(const packed_edge* p) {
 static inline void write_edge(packed_edge* p, int64_t v0, int64_t v1) {
   p->v0 = v0;
   p->v1 = v1;
+}
+
+static inline int comp_edge (const void * elem1, const void * elem2)
+{
+    packed_edge* f = (packed_edge *)elem1;
+    packed_edge* s = (packed_edge *)elem2;
+    if (f->v0 > s->v0) return  1;
+    if (f->v0 < s->v0) return -1;
+
+    // v0 is equal -> compare v1
+    if (f->v1 > s->v1) return  1;
+    if (f->v1 < s->v1) return -1;
+
+    return 0;
+}
+
+static inline void sort_edge(packed_edge* p, size_t size){
+    qsort(p, size, sizeof(packed_edge), comp_edge);
+}
+
+static inline size_t rm_edge(packed_edge* p,packed_edge* q, size_t size){
+    size_t count = 0;
+    int first = 1;
+    packed_edge last;
+    for(size_t i = 0; i < size; ++i){
+        if(p[i].v0 != p[i].v1) {
+            if (first > 0 || (p[i].v0 != last.v0 || p[i].v1 != last.v1)) {
+                q[count] = p[i];
+                last = p[i];
+                ++count;
+
+                first = 0;
+            }
+        }
+    }
+
+    return count;
 }
 
 #endif
